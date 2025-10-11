@@ -86,6 +86,22 @@ ul + ul, ul + ul.menuBlocks, ul + h1, ul + h2, ul + p {
 	font-size: 13px;
 }
 
+div.nearly {
+	border: 2px solid #0000ff;
+	padding: 10px 20px 10px 20px;
+	margin-top: 15px;
+	margin-bottom: 15px;
+}
+
+div.success {
+	border: 2px solid #00ff00;
+	padding: 10px 20px 10px 20px;
+	text-align: center;
+	font-weight: bold;
+	margin-top: 15px;
+	margin-bottom: 15px;
+}
+
 div.warning {
 	border: 2px solid #ff0000;
 	padding: 10px 20px 10px 20px;
@@ -116,6 +132,7 @@ div#container {
 }
 
 div#header {
+	position: relative;
 	padding: 10px;
 	overflow: hidden;
 	background: #2f2f2f;
@@ -278,5 +295,46 @@ span.success {
 
 span.failure {
 	color:red;
+	font-weight: bold;
+}
+
+.theme-icon {
+	position: absolute;
+	right: 0;
+}
+
+.theme-icon img {
+	height: 32px;
+	width: 32px;
+}
+
+
+/* === Dark theme === */
+body.home.dark {
+	background: #2f2f2f;
+	color: #f8fafa;
+}
+
+body.home.dark #container,
+body.home.dark #main_menu,
+body.home.dark #main_body,
+body.home.dark #system_info {
+	background: #2f2f2f;
+}
+
+body.home.dark .vulnerable_code_area {
+	background: #2f2f2f;
+}
+
+body.home.dark .message {
+	background-color: #2f2f2f;
+}
+
+body.home.dark div#guestbook_comments {
+	background-color: #2f2f2f;
+}
+
+.notice {
+	color: red;
 	font-weight: bold;
 }

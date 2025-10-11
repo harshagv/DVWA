@@ -146,7 +146,7 @@ function dvwaLogin( $pUsername ) {
 function dvwaIsLoggedIn() {
 	global $_DVWA;
 
-	if (in_array("disable_authentication", $_DVWA) && $_DVWA['disable_authentication']) {
+	if (array_key_exists("disable_authentication", $_DVWA) && $_DVWA['disable_authentication']) {
 		return true;
 	}
 	$dvwaSession =& dvwaSessionGrab();
@@ -189,6 +189,14 @@ function &dvwaPageNewGrab() {
 }
 
 
+function dvwaThemeGet() {
+	if (isset($_COOKIE['theme'])) {
+		return $_COOKIE[ 'theme' ];
+	}
+	return 'light';
+}
+
+
 function dvwaSecurityLevelGet() {
 	global $_DVWA;
 
@@ -199,14 +207,13 @@ function dvwaSecurityLevelGet() {
 
 	// If not, check to see if authentication is disabled, if it is, use
 	// the default security level.
-	if (in_array("disable_authentication", $_DVWA) && $_DVWA['disable_authentication']) {
+	if (array_key_exists("disable_authentication", $_DVWA) && $_DVWA['disable_authentication']) {
 		return $_DVWA[ 'default_security_level' ];
 	}
 
 	// Worse case, set the level to impossible.
 	return 'impossible';
 }
-
 
 function dvwaSecurityLevelSet( $pSecurityLevel ) {
 	if( $pSecurityLevel == 'impossible' ) {
@@ -300,11 +307,14 @@ function dvwaHtmlEcho( $pPage ) {
 		$menuBlocks[ 'vulnerabilities' ][] = array( 'id' => 'xss_r', 'name' => 'XSS (Reflected)', 'url' => 'vulnerabilities/xss_r/' );
 		$menuBlocks[ 'vulnerabilities' ][] = array( 'id' => 'xss_s', 'name' => 'XSS (Stored)', 'url' => 'vulnerabilities/xss_s/' );
 		$menuBlocks[ 'vulnerabilities' ][] = array( 'id' => 'csp', 'name' => 'CSP Bypass', 'url' => 'vulnerabilities/csp/' );
-		$menuBlocks[ 'vulnerabilities' ][] = array( 'id' => 'javascript', 'name' => 'JavaScript', 'url' => 'vulnerabilities/javascript/' );
+		$menuBlocks[ 'vulnerabilities' ][] = array( 'id' => 'javascript', 'name' => 'JavaScript Attacks', 'url' => 'vulnerabilities/javascript/' );
 		if (dvwaCurrentUser() == "admin") {
 			$menuBlocks[ 'vulnerabilities' ][] = array( 'id' => 'authbypass', 'name' => 'Authorisation Bypass', 'url' => 'vulnerabilities/authbypass/' );
 		}
 		$menuBlocks[ 'vulnerabilities' ][] = array( 'id' => 'open_redirect', 'name' => 'Open HTTP Redirect', 'url' => 'vulnerabilities/open_redirect/' );
+		$menuBlocks[ 'vulnerabilities' ][] = array( 'id' => 'encryption', 'name' => 'Cryptography', 'url' => 'vulnerabilities/cryptography/' );
+		$menuBlocks[ 'vulnerabilities' ][] = array( 'id' => 'api', 'name' => 'API', 'url' => 'vulnerabilities/api/' );
+		# $menuBlocks[ 'vulnerabilities' ][] = array( 'id' => 'bac', 'name' => 'Broken Access Control', 'url' => 'vulnerabilities/bac/' );
 	}
 
 	$menuBlocks[ 'meta' ] = array();
@@ -351,6 +361,7 @@ function dvwaHtmlEcho( $pPage ) {
 
 	$userInfoHtml = '<em>Username:</em> ' . ( dvwaCurrentUser() );
 	$securityLevelHtml = "<em>Security Level:</em> {$securityLevelHtml}";
+	$securityLevelHtml = "<em>Security Level:</em> {$securityLevelHtml}";
 	$localeHtml = '<em>Locale:</em> ' . ( dvwaLocaleGet() );
 	$sqliDbHtml = '<em>SQLi DB:</em> ' . ( dvwaSQLiDBGet() );
 
@@ -392,13 +403,15 @@ function dvwaHtmlEcho( $pPage ) {
 
 	</head>
 
-	<body class=\"home\">
+	<body class=\"home " . dvwaThemeGet() . "\">
 		<div id=\"container\">
 
 			<div id=\"header\">
 
 				<img src=\"" . DVWA_WEB_PAGE_TO_ROOT . "dvwa/images/logo.png\" alt=\"Damn Vulnerable Web Application\" />
-
+                <a href=\"#\" onclick=\"javascript:toggleTheme();\" class=\"theme-icon\" title=\"Toggle theme between light and dark.\">
+                    <img src=\"" . DVWA_WEB_PAGE_TO_ROOT . "dvwa/images/theme-light-dark.png\" alt=\"Damn Vulnerable Web Application\" />
+                </a>
 			</div>
 
 			<div id=\"main_menu\">
@@ -461,7 +474,7 @@ function dvwaHelpHtmlEcho( $pPage ) {
 
 	</head>
 
-	<body>
+	<body class=\"" . dvwaThemeGet() . "\">
 
 	<div id=\"container\">
 
@@ -497,7 +510,7 @@ function dvwaSourceHtmlEcho( $pPage ) {
 
 	</head>
 
-	<body>
+	<body class=\"" . dvwaThemeGet() . "\">
 
 		<div id=\"container\">
 
@@ -512,7 +525,7 @@ function dvwaSourceHtmlEcho( $pPage ) {
 
 // To be used on all external links --
 function dvwaExternalLinkUrlGet( $pLink,$text=null ) {
-	if(is_null( $text )) {
+	if(is_null( $text ) || $text == "") {
 		return '<a href="' . $pLink . '" target="_blank">' . $pLink . '</a>';
 	}
 	else {
@@ -567,7 +580,7 @@ function dvwaDatabaseConnect() {
 		$db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
 	}
 	elseif( $DBMS == 'PGSQL' ) {
-		//$dbconn = pg_connect("host={$_DVWA[ 'db_server' ]} dbname={$_DVWA[ 'db_database' ]} user={$_DVWA[ 'db_user' ]} password={$_DVWA[ 'db_password' ])}"
+		//$dbconn = pg_connect("host={$_DVWA[ 'db_server' ]} dbname={$_DVWA[ 'db_database' ]} user={$_DVWA[ 'db_user' ]} password={$_DVWA[ 'db_password' ]}"
 		//or die( $DBMS_connError );
 		dvwaMessagePush( 'PostgreSQL is not currently supported.' );
 		dvwaPageReload();
@@ -621,7 +634,7 @@ function dvwaGuestbook() {
 function checkToken( $user_token, $session_token, $returnURL ) {  # Validate the given (CSRF) token
 	global $_DVWA;
 
-	if (in_array("disable_authentication", $_DVWA) && $_DVWA['disable_authentication']) {
+	if (array_key_exists("disable_authentication", $_DVWA) && $_DVWA['disable_authentication']) {
 		return true;
 	}
 
@@ -656,7 +669,7 @@ $PHPCONFIGPath       = realpath( getcwd() . DIRECTORY_SEPARATOR . DVWA_WEB_PAGE_
 $phpDisplayErrors = 'PHP function display_errors: <span class="' . ( ini_get( 'display_errors' ) ? 'success">Enabled' : 'failure">Disabled' ) . '</span>';                                                  // Verbose error messages (e.g. full path disclosure)
 $phpDisplayStartupErrors = 'PHP function display_startup_errors: <span class="' . ( ini_get( 'display_startup_errors' ) ? 'success">Enabled' : 'failure">Disabled' ) . '</span>';                                                  // Verbose error messages (e.g. full path disclosure)
 $phpDisplayErrors = 'PHP function display_errors: <span class="' . ( ini_get( 'display_errors' ) ? 'success">Enabled' : 'failure">Disabled' ) . '</span>';                                                  // Verbose error messages (e.g. full path disclosure)
-$phpURLInclude    = 'PHP function allow_url_include: <span class="' . ( ini_get( 'allow_url_include' ) ? 'success">Enabled' : 'failure">Disabled' ) . '</span>';                                   // RFI
+$phpURLInclude    = 'PHP function allow_url_include: <span class="' . ( ini_get( 'allow_url_include' ) ? 'success">Enabled' : 'failure">Disabled' ) . '</span> - Feature deprecated in PHP 7.4, see lab for more information';                                   // RFI
 $phpURLFopen      = 'PHP function allow_url_fopen: <span class="' . ( ini_get( 'allow_url_fopen' ) ? 'success">Enabled' : 'failure">Disabled' ) . '</span>';                                       // RFI
 $phpGD            = 'PHP module gd: <span class="' . ( ( extension_loaded( 'gd' ) && function_exists( 'gd_info' ) ) ? 'success">Installed' : 'failure">Missing - Only an issue if you want to play with captchas' ) . '</span>';                    // File Upload
 $phpMySQL         = 'PHP module mysql: <span class="' . ( ( extension_loaded( 'mysqli' ) && function_exists( 'mysqli_query' ) ) ? 'success">Installed' : 'failure">Missing' ) . '</span>';                // Core DVWA
